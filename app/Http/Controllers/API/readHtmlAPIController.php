@@ -30,12 +30,12 @@ class readHtmlAPIController extends AppBaseController
         // $getDate=3;
         //http://www.caraotadigital.net/category/sucesos/
          //$getDate=4;
-        $link='http://www.caraotadigital.net/category/sucesos/';
+        $link='http://www.el-nacional.com/sucesos/';
        // $web='http://www.ultimasnoticias.com.ve/noticias/sucesos';
        // $web='http://www.caraotadigital.net/sucesos/';
-        $web='http://www.caraotadigital.net/sucesos/';
+        $web='http://www.el-nacional.com/noticias/sucesos/';
         
-        $getDate=4;
+        $getDate=2;
         $this->AnalizarHTML($link,$web,$getDate);
         
     }
@@ -70,42 +70,46 @@ class readHtmlAPIController extends AppBaseController
                     if(strpos($element->href, $ubicacion[$i]) !== false){
                         
                          echo 'LINK REVISANDO --> '.$element->href.'<br>';
+                     
                       //se guarda el link y el doc en la BD
                       $encuentra_ubic=false;
                       $html2 = new \Htmldom($element->href);
                     
                       //extrauyendo la fecha y titulo de la noticia del eluniversal
                       if($getDate==1){
-                          $ret = $html2->find("time[class=date]"); 
-                          $fecha_notic=$ret[0]->attr['datetime'];
-                          $tittle_notice=$html2->find('h1[class=tittle]'); 
+                          $fecha_notic = $html2->find("p[class=clearfix]",0)->plaintext;
+                          $tittle_notice=$html2->find('h2[class=title]',0)->plaintext; 
+                         
                           $articulo='';
-                      //extrayendo el parrafo del link de la noticia
-                      foreach($html2->find('p[style]') as $element2){
-                          //concatenando los parrafos del html
-                          $articulo=$articulo.$element2;
-                          
-                      }
+                          //extrayendo el parrafo del link de la noticia
+                          foreach($html2->find('div[class=note-text] p') as $element2){
+                              //concatenando los parrafos del html
+                              $articulo=$articulo.$element2;
+                              
+                          }
+                         
                       }else{
                              //extrauyendo la fecha y titulo de la noticia del nacional
                           if($getDate==2){
-                              $fecha_notic = $html2->find("time[class=date]",0)->plaintext;
-                              $tittle_notice=$html2->find('header[class=detail-header]',0)->plaintext; 
+                              $fecha_notic = $html2->find("time[class=date]",0)->datetime;
+                              $tittle_notice=$html2->find('header[class=detail-header] h1',0)->plaintext; 
                               $articulo='';
-                                      //extrayendo el parrafo del link de la noticia
-                                      foreach($html2->find('p[style=text-align: justify;]') as $element2){
-                                          //concatenando los parrafos del html
-                                          $articulo=$articulo.$element2;
-                                          
-                                      }
+                              //extrayendo el parrafo del link de la noticia
+                              foreach($html2->find('div[class=detail-body] p') as $element2){
+                                  //concatenando los parrafos del html
+                                  $articulo=$articulo.$element2;
+                                  
+                              }
+                            
                           }else{
                                //extrauyendo la fecha y titulo de la noticia del ultimasnoticias
                               if($getDate==3){
-                                   $fecha_notic = $html2->find("span[class=entry-meta]",0)->children(1)->plaintext;
+                                   $fecha_notic = $html2->find("span[class=entry-meta] span",0)->plaintext;
+                                   
                                      $tittle_notice=$html2->find('h1[class=entry-title h1]',0)->plaintext; 
                                      $articulo='';
                                       //extrayendo el parrafo del link de la noticia
-                                      foreach($html2->find('p') as $element2){
+                                      foreach($html2->find('div[class=entry-content herald-entry-content] p') as $element2){
                                           //concatenando los parrafos del html
                                           $articulo=$articulo.$element2;
                                           
@@ -120,11 +124,12 @@ class readHtmlAPIController extends AppBaseController
                     
                                      $articulo='';
                                       //extrayendo el parrafo del link de la noticia
-                                      foreach($html2->find('p') as $element2){
+                                      foreach($html2->find('div[class=entry-content] p') as $element2){
                                           //concatenando los parrafos del html
                                           $articulo=$articulo.$element2;
                                           
                                       }
+                                      dd($html2->find('div[class=entry-content] p',1)->plaintext);
                                   }
                               }
                           }
@@ -135,10 +140,12 @@ class readHtmlAPIController extends AppBaseController
                       //quita las etiquetas html y deja el txt en utf-8
                       $articulo_normalizado=strip_tags(html_entity_decode($articulo, ENT_HTML5, 'UTF-8'));
                        $collection= array(1=>$this->limpiar($articulo_normalizado));
-                       dd($collection);
+                      
+                       echo $fecha_notic.'---'.$tittle_notice.'---'.$articulo.'<br>';
+                      // dd($collection);
                      //dd($this->limpiar($articulo_normalizado));
                      
-                     $this->principal($collection);
+                     //$this->principal($collection);
                 
                      // $stem = $stemmer->stem('asesinó');
                      // $stem = $stemmer->stem('asesinaron');
